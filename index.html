@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de bord</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css" rel="stylesheet"/>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<style>
+* {padding: 0;margin: 0;box-sizing: border-box;}
+:root {
+--bs-body-bg: #ffffff;
+--bs-body-color: #000000;
+--body: #f1f3ff;
+--border: #ffffff37;
+--borderinvert: #00000037;
+--bs-btn-color: #0c0c0c;
+}
+:root[data-bs-theme="dark"] {
+--bs-body-bg: #000000;
+--bs-body-color: #ffffff;
+--body: #090909;
+--border: #00000037;
+--borderinvert: #ffffff37;
+--bs-btn-color: #f8f9fa;
+}
+.btn-outline-light {color: var(--bs-body-color);border-color: var(--body);}
+.btn-outline-light:hover {color: var(--body);border-color: var(--bs-btn-color);background-color: var(--bs-body-color);}
+html {scroll-behavior: smooth;}
+body {overflow-x: hidden;overflow-y: auto;color: var(--bs-body-color);padding: 0;margin: 0;background-color: var(--body);}
+#mainhold {position: fixed;top: 0;left: 0;;right: 0;width: 100%;overflow: hidden;background-color: var(--bs-body-bg);color: var(--bs-body-color);border-bottom: 2px solid var(--border);z-index: 99999;}
+.toppad {padding-top: 100px;}
+#table {
+width: 100%;
+border-radius: 10px;
+}
+tr, th {
+text-wrap: nowrap;
+}
+#clients {
+width: 100%;
+justify-content: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+#clients .card {
+display: inline-block;
+width: 100%;
+border-radius: 2em;
+padding: 18px 26px;
+margin: 10px 20px;
+}
+small {
+font-weight: 200;
+font-size: 14px;
+}
+#textareajson {
+min-height: fit-content;
+resize: none;
+margin: 0;
+margin-top: 24px;
+margin-left: 60px;
+font-size: 16px;
+line-height: 18px;
+border: none;
+padding-bottom: 0;
+max-width: calc(100% - 60px);
+white-space: nowrap;
+overflow: hidden;
+overflow-x: auto;
+}
+label[for="textareajson"] {
+pointer-events: none;
+}
+#lineNumbers {
+position: absolute;
+text-align: right;
+left: 10px;
+top: 40px;
+width: 40px;
+height: fit-content;
+font-size: 16px;
+line-height: 18px;
+padding: 0;
+padding-right: 10px;
+padding-top: 10px;
+padding-bottom: 0;
+border-right: 2px solid var(--border);
+opacity: 0.6;
+margin: 0;
+overflow: hidden;
+}
+#scrolljsonzone {
+padding: 0;
+height: 200px;
+max-height: max-content;
+border: 2px solid var(--border);
+border-radius: 6px;
+overflow: hidden;
+transition: all 0.1s ease-in-out;
+padding-bottom: 10px;
+}
+.position-relative:has(#scrolljsonzone)::before {
+content: '';
+position: absolute;
+z-index: 2;
+bottom: 0;
+left: 0;
+right: 0;
+width: 100%;
+height: 100px;
+background: linear-gradient(transparent, var(--body), var(--body));
+}
+#scrolljsonzone:has(#textareajson:disabled), #textareajson:disabled {
+background-color: var(--bs-body-bg);
+}
+#textareajson:disabled {
+white-space: pre-wrap;
+}
+#textareajson:focus, #textareajson:active {
+outline: none;
+border: none;
+box-shadow: none;
+}
+#scrolljsonzone:has(#textareajson:focus), #scrolljsonzone:has(#textareajson:active) {
+border: 2px solid #000a991a;
+box-shadow: inset 0 0 0 .1rem #0500991a, 0 0 0 .3rem #05009933;}
+.nowrap {
+text-wrap: nowrap;
+}
+#history [card] .card {
+height: 200px;
+}
+td .bx-copy {
+position: absolute;
+right: 6px;
+width: 20px;
+height: 20px;
+padding: 10px 10px;
+border: 2px solid var(--borderinvert);
+border-radius: 10px;
+display: flex;
+justify-content: center;
+align-items: center;
+cursor: pointer;
+font-size: 10px;
+background-color: transparent;
+transition: all 0.1s ease-in-out;
+}
+td:has(.bx-copy.btn-sm) {
+position: relative;
+padding-right: 40px;
+}
+td .bx-copy:hover {
+border: 2px solid var(--bs-btn-color);
+background-color: var(--bs-btn-color);
+color: var(--bs-body-bg);
+}
+#toolbarbottom {
+position: fixed;
+bottom: 0;
+right: 0;
+width: fit-content;
+overflow: hidden;
+text-wrap: nowrap;
+height: 20px;
+font-size: 10px;
+padding: 0 10px;
+background-color: var(--bs-body-bg);
+color: var(--bs-body-color);
+border: none;
+border-top: 2px solid var(--border);
+border-left: 2px solid var(--border);
+border-top-left-radius: 10px;
+display: flex;
+flex: 1;
+gap: 10px;
+text-overflow: ellipsis;
+align-items: center;
+justify-content: start;
+cursor: help;
+user-select: none;
+}
+#openfile1 {
+width: fit-content;
+}
+table thead tr th:first-child {
+border-top-left-radius: 20px !important;
+}
+table thead tr th:last-child {
+border-top-right-radius: 20px !important;
+}
+table tbody tr:last-child td:first-child {
+border-bottom-left-radius: 20px !important;
+}
+table tbody tr:last-child td:last-child {
+border-bottom-right-radius: 20px !important;
+}
+thead {
+border-bottom: 2px solid var(--borderinvert) !important;
+}
+</style>
+<script>
+function setCookie(cname, cvalue, exdays) {
+  const d = new Date();
+  d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+  let expires = "expires="+d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+function getCookie(cname) {
+  let name = cname + "=";
+  let ca = document.cookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+function updateLineNumbers() {
+    const textarea = document.getElementById('textareajson');
+    const lineNumbers = document.getElementById('lineNumbers');
+    const lines = textarea.value.split(/\r?\n/).length
+    lineNumbers.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('<br>');
+    document.getElementById("textareajson").style.height = "";
+    document.getElementById("textareajson").style.height = document.getElementById("textareajson").scrollHeight + "px";
+    savechanges();
+}
+function savechanges() {
+    const now = new Date();
+    const date = now.toLocaleDateString();
+    const hour = now.getHours();
+    const minutes = now.getMinutes();
+    var jsonString = $("#textareajson").val();
+    var fileSize = new Blob([jsonString]).size;
+    if (fileSize < 1024) {
+        sizeDisplay = fileSize + ' bytes';
+    } else if (fileSize < (1024 * 1024)) {
+        sizeDisplay = (fileSize / 1024).toFixed(2) + ' KB';
+    } else if (fileSize < (1024 * 1024 * 1024)) {
+        sizeDisplay = (fileSize / (1024 * 1024)).toFixed(2) + ' MB';
+    } else {
+        sizeDisplay = (fileSize / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    }
+    $("#lastmodified").html("Version du: " + date + " - " + hour + ":" + minutes + " | " + sizeDisplay);
+    $("#openfile1").html("<span class='small'>Le fichier .json a été mis à jour pour la dernière fois le:</span> " + date + " à " + hour + "h" + minutes);
+}
+</script>
+</head>
+<body>
+<section class="container p-2 pb-5">
+    <div id="mainhold">
+        <div c class="d-flex flex-grow-1 p-4 gap-2 justify-content-center align-items-center">
+            <div id="openfile" class="w-100"></div>
+            <select id="theme" class="form-select w-auto">
+                <option value="dark">Sombre</option>
+                <option value="light" selected>Claire</option>
+            </select>
+        </div>
+    </div>
+    <div class="toppad"></div>
+    <div class="container">
+        <h5>Tableau de bord</h5>
+        <p class="text-muted">Un tout en un pour les gestions de factures, clients, commandes, livraisons et produits.</p>
+        <div id="sliderbase">
+            <div class="row gap-2">
+                <a href="./facture.html" class="btn btn-outline-light border p-2 w-auto">Creer une facture</a>
+                <a href="./facture.html" class="btn btn-outline-light border p-2 w-auto">Gerer mon stock</a>
+            </div>
+        </div>
+        <div class="w-100 d-flex pt-2">
+            <div class="h5 text-muted">Statistiques</div>
+            <div class="ms-auto">
+                <button class="btn btn-outline-light border bx bx-link-external"> Voir tous</button>
+            </div>
+        </div>
+        <div class="d-flex gap-1 pt-2">
+            <div class="d-inline-block card rounded-4 justify-content-center align-items-center gap-2 p-3 pb-0 bg-primary bg-opacity-10" id="last7dayssales"><i class="bx bx-plus"></i> 0 <i class="bx bx-euro"></i><p class="small text-muted p-0">Aujourd'hui</p></div>
+            <div class="d-inline-block card rounded-4 justify-content-center align-items-center gap-2 p-3 pb-0 bg-primary bg-opacity-10" id="last7dayssales"><i class="bx bx-plus"></i> 0 <i class="bx bx-book"></i><p class="small text-muted p-0">Aujourd'hui</p></div>
+            <div class="ms-auto d-flex gap-2">
+                <div class="d-inline-block card rounded-4 justify-content-center align-items-center gap-2 p-3 pb-0 bg-danger bg-opacity-10" id="todaysales">0 <i class="bx bx-euro"></i><p class="small text-muted p-0">Revenu global</p></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <canvas style="width: 100%;height: 300px;" id="facture_clients"></canvas>
+            </div>
+            <div class="col-md-6">
+                <canvas style="width: 100%;height: 300px;" id="argentreteapayer"></canvas>
+            </div>
+        </div>
+        <div class="d-flex w-100 flex-grow-1 pt-4 gap-2">
+            <div class="nowrap h5 w-100">Mes Factures:</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-light dropdown-toggle bx bx-filter-alt" data-bs-toggle="dropdown" aria-expanded="false">
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item active" href="#">Date de modification</a></li>
+                  <li><a class="dropdown-item" href="#">Date de création</a></li>
+                  <li><a class="dropdown-item" href="#">Nom</a></li>
+                  <li><a class="dropdown-item" href="#">Clients</a></li>
+                </ul>
+            </div>
+            <button type="button" class="btn btn-light bx bx-grid">
+            </button>
+        </div>
+    </div>
+    <div class="container p-4">
+        <div class="row" id="history">
+            <div card class="col-12 col-md-6 col-lg-4 p-2">
+                <a href="./facture.html?f=new" class="card d-flex justify-content-center align-items-center p-2 rounded-5 btn btn-outline-light">
+                    <div class="mt-4 rounded-5 d-flex justify-content-center align-items-center p-2 flex-row border border-2">
+                        <div class="bx bx-book-add" style="font-size: 2em;"></div>
+                    </div>
+                    <h3 class="pt-1 text-center">Ajouter une facture<br></h3>
+                    <small class="p-2 pb-4" style="line-height: 18px;">Pensez à sauvegarder régulièrement le fichier .json!</small>
+                </a>
+            </div>
+            <div card class="col-12 col-md-6 col-lg-8 p-2">
+                <div class="card d-flex justify-content-center align-items-center p-2 rounded-5">
+                    <p class="p-4 h4 text-center text-muted">Aucune fature pour le moment!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container" id="clients">
+        <div class="card p-5">
+            <h1>Commencer à ajouter un client manuellement ou par fichier json</h1>
+        </div>
+    </div>
+    <div class="d-flex flex-grow-1 pt-4 gap-2">
+        <div class="w-100">
+            <p class="h4">Mes produits:</p>
+        </div>
+        <div class="d-flex justify-content-center align-items-center">
+            <a href="./edit.html" class="btn btn-outline-primary me-2" type="button">Modifier</a>
+        </div>
+    </div>
+    <p class="small text-muted">Ces produits servent à compléter les factures.</p>
+    <div class="container p-2">
+        <table id="table" class="table table-bordered table-striped p-2">
+            <thead>
+                <tr class="border-0">
+                    <th class="border-0">#</th>
+                    <th class="border-0">Titre</th>
+                    <th class="border-0">Description</th>
+                    <th class="border-0">Qty</th>
+                    <th class="border-0">Taxe</th>
+                    <th class="border-0">Prix Unitaire (HT)</th>
+                </tr>
+            </thead>
+            <tbody id="bodyt">
+                <tr>
+                    <td>---</td>
+                    <td>----------------</td>
+                    <td>----------------</td>
+                    <td>----------------</td>
+                    <td>--.--</td>
+                    <td>--.--</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row p-2">
+        <div class="d-flex flex-grow-1 pt-4 gap-2">
+            <div class="w-100">
+                <p class="h4">Fichier JSON:</p>
+            </div>
+            <div class="d-flex justify-content-center align-items-center">
+                <a href="./edit.html" class="btn btn-outline-primary me-2" type="button" style="text-wrap: nowrap;">Ajouter .json</z>
+                <a href="./edit.html" class="btn btn-outline-primary me-2" type="button">Modifier</a>
+            </div>
+        </div>
+        <p class="small text-muted">(Mes produits) Sauvegarder ce fichier permet de s'assurer que les données ne seront pas perdues.</p>
+    </div>
+    <div class="position-relative p-2">
+        <div class="form-floating w-100" id="scrolljsonzone">
+            <div id="lineNumbers"></div>
+            <textarea class="form-control" placeholder="Json format" id="textareajson" cols="50" rows="25" disabled="true">
+            </textarea>
+            <a href="#" class="border rounded p-2" style="height: fit-content;position: absolute;right: auto;left: 10px;top: 14px;background-color: #000000;color: #ffffff;text-decoration: none;font-size: 10px;">BK editor:</a>
+        </div>
+        <label for="textareajson" class="border rounded p-1 text-muted small" style="height: fit-content;position: absolute;right: 20px;left: auto;top: 30px;" id="lastmodified">Modifier le: --/--/--</label>
+        <div class="w-100 d-flex justify-content-center p-2" style="position: absolute;bottom: 0;z-index: 3;">
+            <a href="./edit.html" class="btn btn-outline-light">Modifier le fichier</a>
+        </div>
+    </div>
+    <div class="p-5"></div>
+</section>
+<section id="toolbarbottom">BK editor | Page X: <div id="mouse_x">0</div> Page Y: <div id="mouse_y">0</div><div id="openfile1"></div></section>
+<script>
+if(!getCookie("theme")) {
+    systemtheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.querySelector("html").setAttribute("data-bs-theme", systemtheme);
+    $("#theme").val(systemtheme);
+    setCookie("theme", systemtheme, 365);
+}
+if (getCookie("theme") == "dark") {
+    document.querySelector("html").setAttribute("data-bs-theme", "dark");
+    $("#theme").val("dark");
+    setCookie("theme", "dark", 365);
+}
+if (getCookie("theme") == "light") {
+    document.querySelector("html").setAttribute("data-bs-theme", "light");
+    $("#theme").val("light");
+    setCookie("theme", "light", 365);
+}
+$("#theme").change(function() {
+    if (this.value == "dark") {
+        document.querySelector("html").setAttribute("data-bs-theme", "dark");
+        setCookie("theme", "dark", 365);
+    }
+    if (this.value == "light") {
+        document.querySelector("html").setAttribute("data-bs-theme", "light");
+        setCookie("theme", "light", 365);
+    }
+});
+</script>
+<script>
+$(document).ready(function() {
+    if (!getCookie("appconfig")) window.location.href = "./add.html";
+    const products = JSON.parse(getCookie("appconfig"), null, 2);
+    let bodyt = "";
+    let clientt = "";
+    let i = 1;
+    $("#openfile").html(products[0].name);
+    $("#textareajson").val(JSON.stringify(getCookie("appconfig"), undefined, 4));
+    setCookie("appconfig", getCookie("appconfig"), 90);
+    updateLineNumbers();
+    savechanges();
+    clientt += `
+            <div class="card">
+                <div class="row">
+                    <div class="p-4 col-md-8 d-flex flex-column justify-content-center align-items-start">
+                        <h5>${products[0].name}</h5>
+                        <h6>${products[0].mail}</h6>
+                        <a href="./edit.html?e=main" class='btn btn-primary bx bx-edit'> Modifier</a>
+                    </div>
+                    <div class="p-4 col-md-4 d-flex flex-column">
+                        <small>${products[0].adresse}</small>
+                        <small>${products[0].adressedetails}</small>
+                        <small>${products[0].adressecountry}</small>
+                        <small>${products[0].tel}</small>
+                    </div>
+                </div>
+            </div>
+            <h4 class="w-100 text-start" style="font-weight: 200;">Clients répertoriés (${products[0].clients.length}):</h4>
+        `;
+    var xValues = [];
+    var yValues = [];
+    var totalfactures = [];
+    var nombredefactureimpayes = [];
+    var barColors = [];
+    for (let indexval = 0; indexval < products[0].clients.length; indexval++) {
+        let client = products[0].clients[indexval];
+        var allmails = client.mail ? `<a class="text-decoration-none" href="mailto:${client.mail}" target="_blank">${client.mail}</a>` : "";
+        allmails += client.mail1 ? `,<br> <a class="text-decoration-none" href="mailto:${client.mail1}" target="_blank">${client.mail1}</a>` : "";
+        allmails += client.mail2 ? `,<br> <a class="text-decoration-none" href="mailto:${client.mail1}" target="_blank">${client.mail2}</a>` : "";
+        allmails += client.mail3 ? `,<br> <a class="text-decoration-none" href="mailto:${client.mail1}" target="_blank">${client.mail3}</a>` : "";
+        xValues.push(client.name);
+        yValues.push(client.total_ttc);
+        barColors.push(client.color);
+        totalfactures.push(client.nb_facture);
+        nombredefactureimpayes.push(client.total_impayees);
+        clientt += `
+            <div class="card">
+                <div class="row">
+                    <div class="w-100 small d-flex"><p class="d-inline-block">Nombre de facture:&nbsp;<span>${client.nb_facture}</span></p><span class="d-inline ms-auto text-end">${indexval + 1} / ${products[0].clients.length}</span></div>
+                    <div class="p-4 col-lg-8 d-flex flex-column">
+                        <h4>${client.name}</h4>
+                        <h6 class="small">${allmails}</h6>
+                        <p class="small"><a href="tel:${client.tel}"class="text-decoration-none">${client.tel}</a><br><a href="https://www.google.fr/maps/search/${client.siege_social}/" target="_blank" class="text-decoration-none">${client.siege_social}</a><br><span class="text-decoration-none">Pays: ${client.pays}</span><br></p>
+                        <p style="font-size: 0.9em;"><span class="text-danger-emphasis">Impayées: ${client.total_impayees} &euro;</span></p>
+                        <p class="h5">Total (TTC): ${client.total_ttc} &euro;</p>
+                    </div>
+                    <div class="p-4 col-lg-4 d-flex flex-column">
+                        <a href="./facture.html?m=${client.mail}" class="btn btn-primary w-100 mb-2">
+                            Créer une facture
+                        </a>
+                        <a href="./historique.html?h=${client.mail}" class="btn btn-light w-100 mb-2">
+                            Voir l&apos;historique
+                        </a>
+                        <a href="./edit.html?e=${client.mail}" class="btn btn-outline-light w-100 mb-4">
+                            Modifier
+                        </a>
+                        <a href="./edit.html?t=${client.mail}" class="btn btn-outline-light w-100 mb-2">
+                            Telecharger .json
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    new Chart("facture_clients", {
+    type: "line",
+    data: {
+        labels: xValues,
+        datasets: [{
+        backgroundColor: barColors,
+        data: yValues
+        }]
+    },
+    options: {
+        legend: {display: false},
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true,
+                    callback: function(value, index, ticks) {
+                        return Number.isInteger(value) ? value + " €" : null;
+                    },
+                }
+            }]
+        },
+        title: {
+        display: true,
+        text: "Factures TTC par clients (Global)"
+        }
+    }
+    });
+    new Chart("argentreteapayer", {
+    type: "bar",
+    data: {
+        labels: xValues,
+        datasets: [{
+        backgroundColor: "#ff3213",
+        data: nombredefactureimpayes
+        }]
+    },
+    options: {
+        legend: {display: false},
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true,
+                    callback: function(value, index, ticks) {
+                        return Number.isInteger(value) ? value + " €" : null;
+                    },
+                }
+            }]
+        },
+        title: {
+        display: true,
+        text: "Reste à payer par client"
+        }
+    }
+    });
+    $("#clients").html(clientt);
+    for (let index = 1; index < products[1].produitspret.length; index++) {
+        let product = products[1].produitspret[index];
+        bodyt += `
+        <tr>
+            <td>${i}</td>
+            <td><i class="btn-sm bx bx-copy"></i><strong>${product.titre}</strong></td>
+            <td><i class="btn-sm bx bx-copy"></i>${product.description}</td>
+            <td>${product.pu_u_ht_u}</td>
+            <td>${product.taxe}%</td>
+            <td><i class="btn-sm bx bx-copy"></i><strong>${product.pu_u_ht}€</strong></td>
+        </tr>
+        `;
+        i++;
+    }
+    $("#bodyt").html(bodyt);
+    let tabledata = new DataTable('#table', {
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: false,
+        lengthChange: true,
+        pageLength: 10,
+        lengthChange: false,
+        scrollX: true
+    });
+    $("label[for='dt-search-0']").html("<i class='bx bx-search'></i>");
+    $("#dt-search-0").addClass("form-control border-0 ");
+    $("#dt-search-0").css("width", "200px");
+    $("#dt-search-0").parent().parent().addClass("border pe-2 rounded").removeClass("dt-layout-end");
+    $("#dt-search-0").parent().parent().parent().prepend("<div class='small text-muted'>Les produits enregistré servent à completer les factures</div>")
+    $("#dt-search-0").parent().addClass("d-flex flex-row flex-grow-1 gap-3 justify-content-center align-items-center flex-row-reverse");
+    $("#dt-search-0").attr("placeholder", "Rechercher un produit...");
+    $(".bx-copy").click(function() {
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val($(this).parent().text()).select();
+        document.execCommand("copy");
+        $temp.remove();
+    });
+});
+document.addEventListener('mouseover', function(event) {
+    $("#mouse_x").html(event.clientX);
+    $("#mouse_y").html(event.clientY);
+});
+updateLineNumbers();
+$('#textareajson').focus(function() {$(this).blur();});
+$("#textareajson").on("change oninput input", function() {updateLineNumbers();})
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
